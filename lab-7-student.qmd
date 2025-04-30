@@ -86,14 +86,30 @@ witness_two <- person |>
 
 #joined the witness' into one data file, people_data, then joined the interview to see if any of the witness gave a testimony. By comparing the witness id and the interviewee testimony, Annabel gave a recount of the murder.
 people_data <- full_join(witness_one, witness_two)
-people_data <- inner_join(people_data, interview, by = c("id" = "person_id")) 
+people_data <- inner_join(people_data, interview, by = c("id" = "person_id"))
+#finding correlation between the gym members
 
+
+#created a data file to keep the info for the potential suspect, narrowing it down by first joining the member and check in data files to find any correlation and the full info such as name, and gym start date. Then changing the format of the dates so that it can be easy to read.
 gym_member <- full_join(get_fit_now_check_in, get_fit_now_member, by = c("membership_id" = "id")) |>
-  filter
+  mutate(check_in_date = ymd(check_in_date)) |>
+  mutate(year = year(check_in_date),
+         month = month(check_in_date), 
+         day = day(check_in_date)) |>
+#filtering out the date that was given by Annabel and then once again making the start date easy to read by mutating it. Finally filtering to include only people that started their gym membership before Jan. 9th and people Annabel could not have seen since they checked out before she arrived.  
+  filter(year == 2018, month == 1, day == 9) |>
+  mutate(membership_start_date = ymd(membership_start_date)) |>
+  filter(membership_start_date <= "2018-01-09", check_out_time >= 1600) |>
+  left_join(interview)
   
+suspect <- drivers_license |>
+  filter(hair_color == "red", car_make == "Tesla", car_model == "Model S", gender == "female") |>
+  left_join(facebook_event_checkin, by = c("id" = "person_id"))
+ 
 
 
 print(gym_member)
+print(suspect)
 
 
 ```
