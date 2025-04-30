@@ -69,6 +69,32 @@ Detective Wickham reaches out to you...
 ```{r}
 # Code for looking at the relevant crime scene report.
 
+#created data file to store in the filtered crime report for the murder and city
+report_cleaned <- crime_scene_report |>
+  filter(city == "SQL City", type == "murder")
+
+# created data file to contain the data of witness one by where they live, using arrange, desc and slice to be able to find the last house on the street
+witness_one <- person |>
+  filter(address_street_name %in% c("Northwestern Dr")) |>
+  arrange(desc(address_number)) |>
+  slice_tail(n=1)
+
+#created data file to contain the data of witness two, by filtering the street name and first name. First separating the name into first and last to be able to locate the first name only.
+witness_two <- person |>
+  separate(name, into = c("first_name", "last_name"), sep = " ")|>
+  filter(address_street_name == "Franklin Ave", first_name == "Annabel")
+
+#joined the witness' into one data file, people_data, then joined the interview to see if any of the witness gave a testimony. By comparing the witness id and the interviewee testimony, Annabel gave a recount of the murder.
+people_data <- full_join(witness_one, witness_two)
+people_data <- inner_join(people_data, interview, by = c("id" = "person_id")) 
+
+gym_member <- full_join(get_fit_now_check_in, get_fit_now_member, by = c("membership_id" = "id")) |>
+  filter
+  
+
+
+print(gym_member)
+
 
 ```
 
