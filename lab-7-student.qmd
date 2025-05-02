@@ -101,17 +101,18 @@ gym_member <- full_join(get_fit_now_check_in, get_fit_now_member, by = c("member
   mutate(membership_start_date = ymd(membership_start_date)) |>
   filter(membership_start_date <= "2018-01-09", check_out_time >= 1600) |>
   left_join(interview)
-  
-suspect <- drivers_license |>
-  filter(hair_color == "red", car_make == "Tesla", car_model == "Model S", gender == "female") |>
-  left_join(facebook_event_checkin, by = c("id" = "person_id"))
- 
-
-
-print(gym_member)
+# since I got my suspect I decided to see who attended the SQL Symphony Concert 3 times. First separating the date to make it easier to search by only year and month, after filtering out the even by the date I then sorted the numbers to make it easier to see who attended at least 3 times. Once i narrowed it down I joined the person data to be able to find the name of the suspect. Then I goind the drivers lices data in order to correctly identify Miranda as the one who hired Jeremy.
+suspect <- facebook_event_checkin|>
+  mutate(date = ymd(date)) |>
+  mutate(year = year(date),
+         month = month(date), 
+         day = day(date)) |>
+  filter(year == 2017, month == 12 & event_name == "SQL Symphony Concert") |>
+  count(person_id, sort = TRUE) |>
+  right_join(person, by = c("person_id" = "id")) |>
+  filter(name == "Miranda Priestly") |>
+  left_join(drivers_license, by = c("license_id" = "id"))
 print(suspect)
-
-
 ```
 
 
@@ -136,5 +137,5 @@ tables manually. Functions from `stringr` and `lubridate` will also be useful.
 ::: callout-note
 ## And the final suspect is...
 
-*put the name of the person responsible for the murder here.*
+*put the name of the person responsible for the murder here: Miranda Priestly ordered the murder and Jeremy Bowers executed the murder.*
 :::
