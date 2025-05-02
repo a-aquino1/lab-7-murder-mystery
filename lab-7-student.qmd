@@ -137,5 +137,5 @@ tables manually. Functions from `stringr` and `lubridate` will also be useful.
 ::: callout-note
 ## And the final suspect is...
 
-*put the name of the person responsible for the murder here: Miranda Priestly ordered the murder and Jeremy Bowers executed the murder.*
+*Miranda Priestly ordered the murder and Jeremy Bowers executed the murder.*
 :::

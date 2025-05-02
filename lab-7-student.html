@@ -145,7 +145,68 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </blockquote>
 <p><strong>Step 1: Find the police report in <code>crime_scene_report</code>. Then used the information in the report to move on to the next data source based on the information learned.</strong></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Code for looking at the relevant crime scene report.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Code for looking at the relevant crime scene report.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#created data file to store in the filtered crime report for the murder and city</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>report_cleaned <span class="ot">&lt;-</span> crime_scene_report <span class="sc">|&gt;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(city <span class="sc">==</span> <span class="st">"SQL City"</span>, type <span class="sc">==</span> <span class="st">"murder"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># created data file to contain the data of witness one by where they live, using arrange, desc and slice to be able to find the last house on the street</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>witness_one <span class="ot">&lt;-</span> person <span class="sc">|&gt;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(address_street_name <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Northwestern Dr"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(address_number)) <span class="sc">|&gt;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_tail</span>(<span class="at">n=</span><span class="dv">1</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#created data file to contain the data of witness two, by filtering the street name and first name. First separating the name into first and last to be able to locate the first name only.</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>witness_two <span class="ot">&lt;-</span> person <span class="sc">|&gt;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(name, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"first_name"</span>, <span class="st">"last_name"</span>), <span class="at">sep =</span> <span class="st">" "</span>)<span class="sc">|&gt;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(address_street_name <span class="sc">==</span> <span class="st">"Franklin Ave"</span>, first_name <span class="sc">==</span> <span class="st">"Annabel"</span>)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">#joined the witness' into one data file, people_data, then joined the interview to see if any of the witness gave a testimony. By comparing the witness id and the interviewee testimony, Annabel gave a recount of the murder.</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>people_data <span class="ot">&lt;-</span> <span class="fu">full_join</span>(witness_one, witness_two)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Joining with `by = join_by(id, license_id, address_number, address_street_name,
+ssn)`</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>people_data <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(people_data, interview, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"id"</span> <span class="ot">=</span> <span class="st">"person_id"</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#finding correlation between the gym members</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#created a data file to keep the info for the potential suspect, narrowing it down by first joining the member and check in data files to find any correlation and the full info such as name, and gym start date. Then changing the format of the dates so that it can be easy to read.</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>gym_member <span class="ot">&lt;-</span> <span class="fu">full_join</span>(get_fit_now_check_in, get_fit_now_member, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"membership_id"</span> <span class="ot">=</span> <span class="st">"id"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">check_in_date =</span> <span class="fu">ymd</span>(check_in_date)) <span class="sc">|&gt;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">year</span>(check_in_date),</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">month =</span> <span class="fu">month</span>(check_in_date), </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">day =</span> <span class="fu">day</span>(check_in_date)) <span class="sc">|&gt;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#filtering out the date that was given by Annabel and then once again making the start date easy to read by mutating it. Finally filtering to include only people that started their gym membership before Jan. 9th and people Annabel could not have seen since they checked out before she arrived.  </span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2018</span>, month <span class="sc">==</span> <span class="dv">1</span>, day <span class="sc">==</span> <span class="dv">9</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">membership_start_date =</span> <span class="fu">ymd</span>(membership_start_date)) <span class="sc">|&gt;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(membership_start_date <span class="sc">&lt;=</span> <span class="st">"2018-01-09"</span>, check_out_time <span class="sc">&gt;=</span> <span class="dv">1600</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(interview)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Joining with `by = join_by(person_id)`</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># since I got my suspect I decided to see who attended the SQL Symphony Concert 3 times. First separating the date to make it easier to search by only year and month, after filtering out the even by the date I then sorted the numbers to make it easier to see who attended at least 3 times. Once i narrowed it down I joined the person data to be able to find the name of the suspect. Then I goind the drivers lices data in order to correctly identify Miranda as the one who hired Jeremy.</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>suspect <span class="ot">&lt;-</span> facebook_event_checkin<span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">date =</span> <span class="fu">ymd</span>(date)) <span class="sc">|&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">year</span>(date),</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">month =</span> <span class="fu">month</span>(date), </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">day =</span> <span class="fu">day</span>(date)) <span class="sc">|&gt;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2017</span>, month <span class="sc">==</span> <span class="dv">12</span> <span class="sc">&amp;</span> event_name <span class="sc">==</span> <span class="st">"SQL Symphony Concert"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(person_id, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">right_join</span>(person, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"person_id"</span> <span class="ot">=</span> <span class="st">"id"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(name <span class="sc">==</span> <span class="st">"Miranda Priestly"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(drivers_license, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"license_id"</span> <span class="ot">=</span> <span class="st">"id"</span>))</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(suspect)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 15
+  person_id     n name      license_id address_number address_street_name    ssn
+      &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;          &lt;dbl&gt;          &lt;dbl&gt; &lt;chr&gt;                &lt;dbl&gt;
+1     99716     3 Miranda …     202298           1883 Golden Ave          9.88e8
+# ℹ 8 more variables: age &lt;dbl&gt;, height &lt;dbl&gt;, eye_color &lt;chr&gt;,
+#   hair_color &lt;chr&gt;, gender &lt;chr&gt;, plate_number &lt;chr&gt;, car_make &lt;chr&gt;,
+#   car_model &lt;chr&gt;</code></pre>
+</div>
 </div>
 <p><strong>Next Steps: Follow the evidence to the person responsible for the murder, building a report as you go.</strong> There are accomplices, some knowingly and some unknowingly, but there is only one mastermind.</p>
 <p>Solve the murder mystery, showing <strong>all of your work in this document</strong>. Your document and code must be well organized, easy to follow, and reproducible.</p>
@@ -166,7 +227,7 @@ And the final suspect is…
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p><em>put the name of the person responsible for the murder here.</em></p>
+<p><em>Miranda Priestly ordered the murder and Jeremy Bowers executed the murder.</em></p>
 </div>
 </div>
 </section>
